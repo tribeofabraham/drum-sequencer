@@ -21,7 +21,7 @@
 <meta name="twitter:image" content="https://www.tribeofabraham.com/images/og-image.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:wght@300;400;500&family=Oswald:wght@300&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -135,15 +135,25 @@ body {
   border-bottom: none;
   padding: 0.6em 1em;
   flex-shrink: 0;
-  font-size: 1.4vw;
+  font-size: max(1.4vw, 11px);   /* scales with the window, but stays readable on a phone */
 }
+/* The top line, as the Loud Math tools: the logo and name, the app's title in a light face whose
+   capitals match the name's (Anton's are 0.86em, Oswald Light's 0.81em: both about 1em here), and
+   Play / clear at the right. */
+.top { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6em 1.2em; margin-bottom: 0.4em; }
+.heading { display: flex; align-items: center; gap: 0.6em; }
+.brand-star { height: 2.2em; width: auto; display: block; }
+.heading h1 { font-size: 1em; font-weight: 400; line-height: 1; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 0.7em; }
+.brand-name { font-family: var(--display); font-size: 1.15em; letter-spacing: 0.02em; text-transform: uppercase; color: #fff; }
+.app-name { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 300; font-size: 1.22em; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; }
+.top .transport { margin-left: auto; margin-top: 0; align-items: center; }
 .controls {
-  display: flex; flex-wrap: wrap; align-items: flex-end;
-  justify-content: center; gap: 1.2em;
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: center; gap: 0.6em 2em;
   margin: 0 auto;
 }
 .control-group {
-  display: flex; flex-direction: column; align-items: center; gap: 0.3em;
+  display: flex; align-items: center; gap: 0.5em;
 }
 .control-group label {
   font-family: var(--display); font-size: 0.7em;
@@ -170,7 +180,7 @@ body {
 
 input[type="range"] {
   -webkit-appearance: none; appearance: none;
-  width: 14em; height: 0.15em;
+  width: 9em; height: 0.15em;
   background: rgba(255,255,255,0.15); border: none; border-radius: 0.15em;
   outline: none;
 }
@@ -184,12 +194,12 @@ input[type="range"]::-moz-range-thumb {
   background: var(--c7); border: none; border-radius: 50%; cursor: pointer;
 }
 .bpm-display {
-  font-family: var(--display); font-size: 1.5em;
+  font-family: var(--display); font-size: 1.1em;
   color: white; letter-spacing: 0.04em;
   min-width: 3ch; text-align: center;
 }
 .swing-val {
-  font-family: var(--display); font-size: 1.5em;
+  font-family: var(--display); font-size: 1.1em;
   color: white; letter-spacing: 0.04em;
   min-width: 3ch; text-align: center;
 }
@@ -199,8 +209,8 @@ input[type="range"]::-moz-range-thumb {
 .btn {
   background-color: rgba(0,0,0,0.4);
   cursor: pointer;
-  height: 3em;
-  width: 3em;
+  height: 2.4em;
+  width: 2.4em;
   border-radius: 50%;
   border: solid .05em rgba(255,255,255,0.4);
   display: flex; align-items: center; justify-content: center;
@@ -225,7 +235,7 @@ input[type="range"]::-moz-range-thumb {
   padding-top: 1.5em;
   padding-right: 4em;
   width: 100%;
-  font-size: 1.4vw;
+  font-size: max(1.4vw, 11px);   /* scales with the window, but stays readable on a phone */
 }
 /* The rows share the height that's left, so the bars are as tall as the window allows */
 .sequencer {
@@ -292,13 +302,7 @@ input[type="range"]::-moz-range-thumb {
   .cg-timesig { grid-column: 1; grid-row: 2; justify-self: start; }
   .cg-tempo { grid-column: 2; grid-row: 1; margin-left: 1.5em; }
   .cg-swing { grid-column: 2; grid-row: 2; margin-left: 1.5em; }
-  input[type="range"] { width: 20em; }
-  .transport {
-    position: absolute;
-    right: 4em;
-    bottom: 0.3em;
-  }
-  .controls-bar { position: relative; }
+  input[type="range"] { width: 7em; }
 }
 
 /* ── THUMBNAIL: hide controls when embedded tiny ── */
@@ -315,7 +319,16 @@ input[type="range"]::-moz-range-thumb {
 
 <!-- CONTROLS -->
 <header class="controls-bar">
-  <h1 class="visually-hidden">Drum Sequencer</h1>
+  <div class="top">
+    <div class="heading">
+      <img src="images/LogoOnly.svg" alt="" class="brand-star" width="864" height="864">
+      <h1><span class="brand-name">Tribe of Abraham</span> <span class="app-name">Drum Sequencer</span></h1>
+    </div>
+    <div class="transport">
+      <button type="button" class="btn btn-play" id="playBtn" aria-label="Play" onclick="togglePlay()"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="8,5 19,12 8,19" fill="white"/></svg></button>
+      <button type="button" class="btn btn-clear" id="clearBtn" aria-label="Clear all steps" onclick="clearGrid()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+  </div>
   <div class="controls">
     <div class="control-group cg-preset">
       <label for="presetSelect">Preset</label>
@@ -334,10 +347,6 @@ input[type="range"]::-moz-range-thumb {
       <label for="swingSlider">Swing</label>
       <span class="swing-val" id="swingDisplay">0%</span>
       <input type="range" id="swingSlider" min="0" max="75" value="0">
-    </div>
-    <div class="transport">
-      <button type="button" class="btn btn-play" id="playBtn" aria-label="Play" onclick="togglePlay()"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="8,5 19,12 8,19" fill="white"/></svg></button>
-      <button type="button" class="btn btn-clear" id="clearBtn" aria-label="Clear all steps" onclick="clearGrid()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
   </div>
 </header>
