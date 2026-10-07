@@ -146,7 +146,7 @@ body {
 .heading h1 { font-size: 1em; font-weight: 400; line-height: 1; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 0.7em; }
 .brand-name { font-family: var(--display); font-size: 1.15em; letter-spacing: 0.02em; text-transform: uppercase; color: #fff; }
 .app-name { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 300; font-size: 1.22em; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; }
-.top .transport { margin-left: auto; margin-top: 0; align-items: center; }
+.top .transport { margin-left: auto; margin-top: 0; align-items: center; gap: 0.7em; }
 .controls {
   display: flex; flex-wrap: wrap; align-items: center;
   justify-content: center; gap: 0.6em 2em;
@@ -206,23 +206,23 @@ input[type="range"]::-moz-range-thumb {
 
 /* ── TRANSPORT BUTTONS ── */
 .transport { display: flex; gap: 0.5em; align-items: flex-end; margin-top: 0.4em; }
+/* Play and Clear all: labelled, a size up from the settings. Play is filled in the palette's orange
+   (black on it, 7.8:1) and goes red with white while it plays (5.9:1). */
 .btn {
-  background-color: rgba(0,0,0,0.4);
-  cursor: pointer;
-  height: 2.4em;
-  width: 2.4em;
-  border-radius: 50%;
-  border: solid .05em rgba(255,255,255,0.4);
-  display: flex; align-items: center; justify-content: center;
-  padding: 0;
-  transition: all 0.2s;
+  font-family: var(--display); font-size: 1.15em; letter-spacing: 0.1em; text-transform: uppercase;
+  height: 2.3em; padding: 0 1.1em;
+  display: inline-flex; align-items: center; gap: 0.5em;
+  border-radius: 0.3em; cursor: pointer;
+  border: 0.1em solid #fff; background: transparent; color: #fff;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
-.btn:hover { border-color: rgba(255,255,255,0.8); }
-.btn svg { width: 60%; height: 60%; }
-.btn.active {
-  border-color: var(--c1);
-}
-.btn-clear:hover { border-color: rgba(255,255,255,0.8); }
+.btn svg { width: 0.9em; height: 0.9em; flex-shrink: 0; }
+.btn:hover { background: rgba(255,255,255,0.12); }
+.btn:focus-visible { outline: 0.12em solid #fff; outline-offset: 0.15em; }
+.btn-play { background: var(--c7); border-color: var(--c7); color: #000; min-width: 6.2em; justify-content: center; }
+.btn-play:hover { background: #ff9a52; border-color: #ff9a52; }
+.btn-play.active { background: var(--c1); border-color: var(--c1); color: #fff; }
+.btn-play.active:hover { background: #d63a3a; border-color: #d63a3a; }
 
 /* ── (preset-info and legend removed — info lives in overlay) ──*/
 
@@ -325,8 +325,8 @@ input[type="range"]::-moz-range-thumb {
       <h1><span class="brand-name">Tribe of Abraham</span> <span class="app-name">Drum Sequencer</span></h1>
     </div>
     <div class="transport">
-      <button type="button" class="btn btn-play" id="playBtn" aria-label="Play" onclick="togglePlay()"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="8,5 19,12 8,19" fill="white"/></svg></button>
-      <button type="button" class="btn btn-clear" id="clearBtn" aria-label="Clear all steps" onclick="clearGrid()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button type="button" class="btn btn-play" id="playBtn" onclick="togglePlay()"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="7,4 20,12 7,20" fill="currentColor"/></svg><span>Play</span></button>
+      <button type="button" class="btn btn-clear" id="clearBtn" onclick="clearGrid()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span>Clear all</span></button>
     </div>
   </div>
   <div class="controls">
@@ -1116,12 +1116,11 @@ function updateStepVisual(instId, stepIdx) {
 // ═══════════════════════════════════════════
 function togglePlay() { if (isPlaying) stopPlay(); else startPlay(); }
 
-const PLAY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="8,5 19,12 8,19" fill="white"/></svg>';
-const STOP_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" fill="white"/></svg>';
+const PLAY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="7,4 20,12 7,20" fill="currentColor"/></svg><span>Play</span>';
+const STOP_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" fill="currentColor"/></svg><span>Stop</span>';
 function showPlayState() {
   const btn = document.getElementById('playBtn');
   btn.innerHTML = isPlaying ? STOP_ICON : PLAY_ICON;
-  btn.setAttribute('aria-label', isPlaying ? 'Stop' : 'Play');
   btn.classList.toggle('active', isPlaying);
 }
 
