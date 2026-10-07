@@ -61,7 +61,7 @@ body {
   font-weight: 300;
   line-height: 1.6;
   overflow-x: hidden;
-  min-height: 100vh;
+  height: 100vh;
   display: flex; flex-direction: column;
 }
 
@@ -81,10 +81,14 @@ body {
   position: fixed; inset: 0; z-index: 200;
   background: rgba(0,0,0,0.95);
   display: flex; align-items: center; justify-content: center;
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.25s;
+  opacity: 0; pointer-events: none; visibility: hidden;
+  transition: opacity 0.25s, visibility 0.25s;
 }
-.overlay.open { opacity: 1; pointer-events: all; }
+.overlay.open { opacity: 1; pointer-events: all; visibility: visible; }
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
 .overlay-card {
   background: #1a1a1a; border: solid 0.08em var(--border-bright);
   border-radius: 0.4em; padding: 2.5rem; max-width: 30em; width: 90%;
@@ -215,73 +219,58 @@ input[type="range"]::-moz-range-thumb {
 /* ── SEQUENCER GRID ── */
 .sequencer-wrap {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding: 1em;
   padding-top: 1.5em;
   padding-right: 4em;
   width: 100%;
   font-size: 1.4vw;
 }
+/* The rows share the height that's left, so the bars are as tall as the window allows */
 .sequencer {
-  display: grid; gap: clamp(0.05em, 0.15vmin, 0.2em);
+  display: grid; gap: 0.3em;
+  grid-template-rows: auto;
+  grid-auto-rows: minmax(2.2em, 1fr);
+  height: 100%;
   background: #000000;
-  border-radius: 0.3em;
   width: 100%;
-  padding: clamp(0.05em, 0.15vmin, 0.2em);
 }
 .row-label {
   display: flex; align-items: center; justify-content: flex-end;
   padding-right: clamp(0.2rem, 0.8vmin, 0.7rem);
   font-family: var(--display);
-  font-size: clamp(0.35rem, 0.7vmin, 0.6rem); letter-spacing: 0.08em;
+  font-size: 0.75em; letter-spacing: 0.08em;   /* scales with the grid */
   text-transform: uppercase; white-space: nowrap;
 }
+/* Each step is a button whose edge is always its drum's colour (so an empty one still shows); how
+   full it is shows the level: soft a third, medium two thirds, accent full. As Loud Math's tools.
+   --edge is the drum's colour, lightened where needed to show at 3:1 on black. */
 .step {
-  width: 100%; aspect-ratio: 1;
+  width: 100%; height: 100%; padding: 0; font: inherit;
   background: transparent;
-  border: none; border-radius: 50%;
-  cursor: pointer;
-  transition: background 0.08s, box-shadow 0.08s;
-  position: relative;
-  display: flex; align-items: center; justify-content: center;
+  border: 0.1em solid var(--edge); border-radius: 0.25em;
+  overflow: hidden; cursor: pointer;
+  display: flex; align-items: flex-end;
 }
-.step::before {
-  content: '';
-  width: 20%; height: 20%;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  transition: width 0.1s, height 0.1s, background 0.1s, box-shadow 0.1s;
-}
-.step:hover::before {
-  background: rgba(255,255,255,0.18);
-  width: 45%; height: 45%;
-}
-/* Velocity colors are set per-row via inline CSS custom property --rc */
-.step.vel-1::before { width: 35%; height: 35%; background: color-mix(in srgb, var(--rc) 50%, transparent); }
-.step.vel-2::before { width: 65%; height: 65%; background: color-mix(in srgb, var(--rc) 75%, transparent); }
-.step.vel-3::before { width: 100%; height: 100%; background: var(--rc); box-shadow: 0 0 0.4em color-mix(in srgb, var(--rc) 50%, transparent); }
-
-.step.playing::after {
-  content: '';
-  position: absolute; inset: -0.08em;
-  border: 0.15em solid #fff;
-  border-radius: 50%;
-  pointer-events: none;
-}
-.step.downbeat {
-  border-left: 0.15em solid rgba(255,255,255,0.15);
-}
-
+.step .fill { display: block; width: 100%; height: 0; background: var(--edge); transition: height 0.08s; }
+.step.vel-1 .fill { height: 34%; opacity: 0.75; }
+.step.vel-2 .fill { height: 67%; opacity: 0.9; }
+.step.vel-3 .fill { height: 100%; }
+.step:hover { box-shadow: 0 0 0 0.1em #fff inset; }
+.step:focus-visible { outline: 0.15em solid #fff; outline-offset: 0.1em; position: relative; z-index: 1; }
+.step.playing { filter: brightness(1.6); box-shadow: 0 0 0.5em var(--edge); }
+/* A little space before each beat, so the beats read as groups */
+.step.downbeat { margin-left: 0.35em; width: calc(100% - 0.35em); }
+@media (prefers-reduced-motion: reduce) { .step .fill { transition: none; } }
 /* Step numbers */
 .step-number {
   display: flex; align-items: center; justify-content: center;
   font-family: var(--display);
-  font-size: clamp(0.3rem, 0.55vmin, 0.45rem); color: var(--text-muted); opacity: 0.6;
+  font-size: 0.6em; color: var(--text-dim);
 }
-.step-number.downbeat-num { color: var(--text-dim); opacity: 1; }
+.step-number.downbeat-num { color: var(--text); }
 .step-number.active-col { color: #fff; opacity: 1; }
-
-
-
 /* ── RESPONSIVE: portrait ── */
 @media (orientation: portrait) {
   .controls {
@@ -320,52 +309,48 @@ input[type="range"]::-moz-range-thumb {
   .step-number { display: none; }
 }
 
-/* ── color-mix fallback for older browsers ── */
-@supports not (background: color-mix(in srgb, red 50%, transparent)) {
-  .step.vel-1::before { opacity: 0.35; background: var(--rc); }
-  .step.vel-2::before { opacity: 0.65; background: var(--rc); }
-  .step.vel-3::before { opacity: 1; background: var(--rc); }
-}
 </style>
 </head>
 <body>
 
 <!-- CONTROLS -->
-<div class="controls-bar">
+<header class="controls-bar">
+  <h1 class="visually-hidden">Drum Sequencer</h1>
   <div class="controls">
     <div class="control-group cg-preset">
-      <label>Preset</label>
+      <label for="presetSelect">Preset</label>
       <select id="presetSelect"></select>
     </div>
     <div class="control-group cg-timesig">
-      <label>Time Sig</label>
+      <label for="timeSigSelect">Time Sig</label>
       <select id="timeSigSelect"></select>
     </div>
     <div class="control-group cg-tempo">
-      <label>Tempo</label>
+      <label for="bpmSlider">Tempo</label>
       <div class="bpm-display" id="bpmDisplay">120</div>
       <input type="range" id="bpmSlider" min="40" max="240" value="120">
     </div>
     <div class="control-group cg-swing">
-      <label>Swing</label>
+      <label for="swingSlider">Swing</label>
       <span class="swing-val" id="swingDisplay">0%</span>
       <input type="range" id="swingSlider" min="0" max="75" value="0">
     </div>
     <div class="transport">
-      <button class="btn btn-clear" id="clearBtn" onclick="clearGrid()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button type="button" class="btn btn-play" id="playBtn" aria-label="Play" onclick="togglePlay()"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="8,5 19,12 8,19" fill="white"/></svg></button>
+      <button type="button" class="btn btn-clear" id="clearBtn" aria-label="Clear all steps" onclick="clearGrid()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
   </div>
-</div>
+</header>
 
 <!-- GRID -->
-<div class="sequencer-wrap">
-  <div class="sequencer" id="sequencer"></div>
-</div>
+<main class="sequencer-wrap">
+  <div class="sequencer" id="sequencer" role="group" aria-label="Pattern: one row per drum. Arrow keys move, Enter cycles a step, Delete clears it."></div>
+</main>
 
 <!-- INFO OVERLAY -->
-<div class="overlay" id="infoOverlay" onclick="if(event.target===this)toggleInfo()">
+<div class="overlay" id="infoOverlay" role="dialog" aria-label="About the Drum Sequencer" onclick="if(event.target===this)toggleInfo()">
   <div class="overlay-card">
-    <button class="overlay-close" onclick="toggleInfo()">&times;</button>
+    <button type="button" class="overlay-close" aria-label="Close" onclick="toggleInfo()">&times;</button>
     <h2><span class="t-drum">Drum</span> <span class="t-seq">Sequencer</span></h2>
     <p>Build beats across world traditions. Explore polyrhythms, odd meters, and ethnic grooves from Afrobeat to Balkan 7/8.</p>
     <p>Click a step to cycle through three velocity levels and off. Right-click to clear. Press Space to play/stop.</p>
@@ -396,6 +381,21 @@ const ROW_COLORS = {
   cowbell: '#ffc70f', // Yellow
   shaker:  '#7ea740', // Leaf Green
 };
+
+// A colour as it's shown on black: the palette colour, mixed toward white only as far as it takes to
+// reach min:1 contrast (WCAG: 4.5 for the row names, 3 for the steps' edges and fills).
+function onBlack(hex, min) {
+  const rgb = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+  const lum = c => {
+    const [r, g, b] = c.map(v => v / 255).map(v => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  for (let t = 0; t <= 1; t += 0.02) {
+    const c = rgb.map(v => Math.round(v + (255 - v) * t));
+    if ((lum(c) + 0.05) / 0.05 >= min) return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
+  }
+  return '#ffffff';
+}
 
 // ═══════════════════════════════════════════
 // AUDIO ENGINE
@@ -928,7 +928,7 @@ function init() {
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'INPUT') {
+    if (e.code === 'Space' && !['SELECT', 'INPUT', 'BUTTON'].includes(e.target.tagName)) {
       e.preventDefault(); togglePlay();
     }
   });
@@ -1002,6 +1002,7 @@ function buildGrid() {
   const ts = timeSignatures[currentTimeSig];
   const stepsPerBeat = ts.subdivision;
   const cols = totalSteps;
+  focusAt = { r: Math.min(focusAt.r, instruments.length - 1), s: Math.min(focusAt.s, cols - 1) };
   container.style.gridTemplateColumns = 'clamp(3em, 8vmin, 5em) repeat(' + cols + ', 1fr)';
 
   // Step numbers
@@ -1018,24 +1019,30 @@ function buildGrid() {
   }
 
   // Rows
-  for (const inst of instruments) {
+  instruments.forEach((inst, r) => {
     const label = document.createElement('div');
     label.className = 'row-label';
-    label.style.color = ROW_COLORS[inst.id];
+    label.style.color = onBlack(ROW_COLORS[inst.id], 4.5);
     label.textContent = inst.name;
     container.appendChild(label);
 
     for (let s = 0; s < cols; s++) {
-      const step = document.createElement('div');
+      const step = document.createElement('button');
+      step.type = 'button';
       step.className = 'step';
-      step.style.setProperty('--rc', ROW_COLORS[inst.id]);
+      step.style.setProperty('--edge', onBlack(ROW_COLORS[inst.id], 3));
       step.dataset.inst = inst.id;
       step.dataset.step = s;
       step.id = 'step-' + inst.id + '-' + s;
+      step.tabIndex = (r === focusAt.r && s === focusAt.s) ? 0 : -1;
+      step.innerHTML = '<span class="fill"></span>';
       if (s % stepsPerBeat === 0) step.classList.add('downbeat');
       const vel = grid[inst.id][s];
       if (vel > 0) step.classList.add('vel-' + vel);
+      step.setAttribute('aria-label', stepLabel(inst, s));
       step.addEventListener('click', () => cycleStep(inst.id, s));
+      step.addEventListener('focus', () => { focusAt = { r, s }; });
+      step.addEventListener('keydown', (e) => stepKeys(e, r, s));
       step.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         grid[inst.id][s] = 0;
@@ -1043,6 +1050,35 @@ function buildGrid() {
       });
       container.appendChild(step);
     }
+  });
+}
+
+// One step at a time is in the Tab order; the arrow keys move around the grid.
+let focusAt = { r: 0, s: 0 };
+const LEVEL_NAMES = ['off', 'soft', 'medium', 'accent'];
+function stepLabel(inst, s) {
+  return inst.name + ', step ' + (s + 1) + ' of ' + totalSteps + ': ' + LEVEL_NAMES[grid[inst.id][s]];
+}
+function stepKeys(e, r, s) {
+  const moves = { ArrowLeft: [0, -1], ArrowRight: [0, 1], ArrowUp: [-1, 0], ArrowDown: [1, 0] };
+  let to = null;
+  if (moves[e.key]) to = { r: r + moves[e.key][0], s: s + moves[e.key][1] };
+  if (e.key === 'Home') to = { r, s: 0 };
+  if (e.key === 'End') to = { r, s: totalSteps - 1 };
+  if (to) {
+    e.preventDefault();
+    to.r = Math.max(0, Math.min(instruments.length - 1, to.r));
+    to.s = Math.max(0, Math.min(totalSteps - 1, to.s));
+    const from = document.getElementById('step-' + instruments[r].id + '-' + s);
+    const el = document.getElementById('step-' + instruments[to.r].id + '-' + to.s);
+    if (from) from.tabIndex = -1;
+    if (el) { el.tabIndex = 0; el.focus(); }
+    return;
+  }
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    e.preventDefault();
+    grid[instruments[r].id][s] = 0;
+    updateStepVisual(instruments[r].id, s);
   }
 }
 
@@ -1063,6 +1099,7 @@ function updateStepVisual(instId, stepIdx) {
   el.classList.remove('vel-1', 'vel-2', 'vel-3');
   const vel = grid[instId][stepIdx];
   if (vel > 0) el.classList.add('vel-' + vel);
+  el.setAttribute('aria-label', stepLabel(instruments.find(i => i.id === instId), stepIdx));
 }
 
 // ═══════════════════════════════════════════
@@ -1070,10 +1107,20 @@ function updateStepVisual(instId, stepIdx) {
 // ═══════════════════════════════════════════
 function togglePlay() { if (isPlaying) stopPlay(); else startPlay(); }
 
+const PLAY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="8,5 19,12 8,19" fill="white"/></svg>';
+const STOP_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" fill="white"/></svg>';
+function showPlayState() {
+  const btn = document.getElementById('playBtn');
+  btn.innerHTML = isPlaying ? STOP_ICON : PLAY_ICON;
+  btn.setAttribute('aria-label', isPlaying ? 'Stop' : 'Play');
+  btn.classList.toggle('active', isPlaying);
+}
+
 function startPlay() {
   ensureAudio(); isPlaying = true; currentStep = -1;
   nextStepTime = audioCtx.currentTime + 0.05;
   scheduler();
+  showPlayState();
 }
 
 function stopPlay() {
@@ -1081,6 +1128,7 @@ function stopPlay() {
   document.querySelectorAll('.step.playing').forEach(el => el.classList.remove('playing'));
   document.querySelectorAll('.step-number.active-col').forEach(el => el.classList.remove('active-col'));
   currentStep = -1;
+  showPlayState();
 }
 
 function scheduler() {
